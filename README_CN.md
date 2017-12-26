@@ -1,34 +1,33 @@
 # react-native-ezsidemenu
 
-[中文文档](./README_CN.md)
 
 [![NPM version][npm-image]][npm-url]
 [![release](https://img.shields.io/github/release/easyui/react-native-ezsidemenu.svg?style=flat-square)](https://github.com/easyui/react-native-ezsidemenu/releases)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/joeferraro/react-native-ezsidemenu/master/LICENSE.md)
 
-customizable side menu for React Native on iOS&android.
+简单易用的，支持侧滑和自定义的react native菜单组件。 支持iOS和android。
 
 
-## Installation
+## 安装
 
 ```
 $ npm install react-native-ezsidemenu --save
 ```
 
-## Preview
+## 预览
 
 ![showios](showios.gif)  ![showandroid](showandroid.gif)
 
 
-## Usage
+## 使用
 
-import library：
+引入组件：
 
 ```js
 import EZSideMenu from 'react-native-ezsidemenu';
 ```
 
-### simple swiper
+### 简单使用
 
 ```js
 //App.js
@@ -41,7 +40,7 @@ simpleMenu() {
   }
 ```
 
-### advanced
+### 高级使用
 
 ```js
 //App.js
@@ -74,30 +73,30 @@ simpleMenu() {
 
 ## API
 
-### Props
+### 属性
 
 | key | type | default | description |                 
 | --- | --- | --- | --- |
-| menu | PropTypes.object.isRequired |  | menu component |
-| shadowStyle | View.propTypes.style | { backgroundColor: 'rgba(0,0,0,.4)' } |  the style of the menu sahdow|
-| menuStyle | View.propTypes.style | {} | the style of the menu  |
-| direction | PropTypes.string | direction.Left | the direction of the menu |
-| position | PropTypes.object | new Animated.Value(0) | the distance of the menu |
-| width | PropTypes.number | DEVICE_SCREEN.width * 0.7 | the width of the menu |
-| animationFunction | PropTypes.func | animationFunction: (prop, value) => Animated.timing(prop, { <br /> easing: Easing.inOut(Easing.ease), <br /> duration: 300, <br /> toValue: value <br /> }), | the animation of the menu |
-| panGestureEnabled | PropTypes.bool | true | the menu can be move with gestures or not |
-| panWidthFromEdge | PropTypes.number | 60 | edge distance on content view to open side menu |
-| panTolerance | PropTypes.object | { x: 6, y: 20 } |  pan move tolerance |
-| onPanMove | PropTypes.func | | callback on menu move |
-| onSliding | PropTypes.func | | callback on menu is sliding | 
-| onMenuStateChaned | PropTypes.func | | callback on menu state is chaned |
+| menu | PropTypes.object.isRequired |  | 菜单组件 |
+| shadowStyle | View.propTypes.style | { backgroundColor: 'rgba(0,0,0,.4)' } |  菜单旁的样式|
+| menuStyle | View.propTypes.style | {} | 菜单组件样式  |
+| direction | PropTypes.string | direction.Left | 菜单方向 |
+| position | PropTypes.object | new Animated.Value(0) | 菜单滑出位置|
+| width | PropTypes.number | DEVICE_SCREEN.width * 0.7 | 菜单宽度 |
+| animationFunction | PropTypes.func | animationFunction: (prop, value) => Animated.timing(prop, { <br /> easing: Easing.inOut(Easing.ease), <br /> duration: 300, <br /> toValue: value <br /> }), | 菜单划动动画 |
+| panGestureEnabled | PropTypes.bool | true | 菜单是否支持手势划动 |
+| panWidthFromEdge | PropTypes.number | 60 | 菜单划开有效距离 |
+| panTolerance | PropTypes.object | { x: 6, y: 20 } |  菜单划动容错范围 |
+| onPanMove | PropTypes.func | | 菜单划动回调 |
+| onSliding | PropTypes.func | | 菜单动画回调 | 
+| onMenuStateChaned | PropTypes.func | | 菜单状态改变回调 |
        
 
-### Function
+### 方法
 | function | description |                    
 | --- | --- | 
-| open() | open menu |
-| close() | close menu |
+| open() | 打开菜单 |
+| close() | 关闭菜单 |
 
 
 ## License
