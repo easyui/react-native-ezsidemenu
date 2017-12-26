@@ -37,7 +37,7 @@ export default class EZSideMenu extends Component<{}> {
         shadowStyle: View.propTypes.style,
         menuStyle: View.propTypes.style,
         direction: PropTypes.string,
-        left: PropTypes.object,
+        position: PropTypes.object,
         width: PropTypes.number,
         animationFunction: PropTypes.func,
 
@@ -56,7 +56,7 @@ export default class EZSideMenu extends Component<{}> {
         shadowStyle: { backgroundColor: 'rgba(0,0,0,.4)' },
         menuStyle: {},
         direction: direction.Left,
-        left: new Animated.Value(0),
+        position: new Animated.Value(0),
         width: DEVICE_SCREEN.width * 0.7,
         animationFunction: (prop, value) => Animated.timing(prop, {
             easing: Easing.inOut(Easing.ease),
@@ -97,13 +97,13 @@ export default class EZSideMenu extends Component<{}> {
 
         this.isPan = false
 
-        const left = props.left;
+        const position = props.position;
         this.state = {
-            left,
+            position,
             isOpen: false,
             isMoving: false
         };
-        left.addListener(this.events.onSliding);
+        position.addListener(this.events.onSliding);
     }
 
     componentWillMount() {
@@ -134,7 +134,7 @@ export default class EZSideMenu extends Component<{}> {
     _close() {
         this.setState({ isMoving: true });
         this.props
-            .animationFunction(this.state.left, 0)
+            .animationFunction(this.state.position, 0)
             .start(
             () => {
                 if (!this.isPan) {
@@ -147,7 +147,7 @@ export default class EZSideMenu extends Component<{}> {
     _open() {
         this.setState({ isMoving: true });
         this.props
-            .animationFunction(this.state.left, this.props.width)
+            .animationFunction(this.state.position, this.props.width)
             .start(
             () => {
                 if (!this.isPan) {
@@ -235,13 +235,13 @@ export default class EZSideMenu extends Component<{}> {
 
         let shoudMove = false
         if (isOpen) {
-            if (direction === direction.Left) {
+            if (direction === EZSideMenu.direction.Left) {
                 shoudMove = gestureState.dx < 0
             } else {
                 shoudMove = gestureState.dx > 0
             }
         } else {
-            if (direction === direction.Left) {
+            if (direction === EZSideMenu.direction.Left) {
                 shoudMove = gestureState.moveX <= offset && gestureState.dx > 0
             } else {
                 shoudMove = (DEVICE_SCREEN.width - gestureState.moveX <= offset) && gestureState.dx < 0
@@ -263,17 +263,17 @@ export default class EZSideMenu extends Component<{}> {
     };
 
     _handleonPanResponderGrant(evt, gestureState) {
-        this.state.left.setOffset(this.state.left._value);
-        this.state.left.setValue(0);
+        this.state.position.setOffset(this.state.position._value);
+        this.state.position.setValue(0);
     };
 
     _handleonPanResponderMove(evt, gestureState) {
         const { dx } = gestureState;
-        const position = this.props.direction === direction.Left ? dx : -dx;
+        const position = this.props.direction === EZSideMenu.direction.Left ? dx : -dx;
 
-        const x = Math.min(position, this.props.width - this.state.left._offset);
-        if (x !== this.state.left._value) {
-            this.state.left.setValue(x);
+        const x = Math.min(position, this.props.width - this.state.position._offset);
+        if (x !== this.state.position._value) {
+            this.state.position.setValue(x);
             this.events.onPanMove(x)
         }
     };
@@ -281,9 +281,9 @@ export default class EZSideMenu extends Component<{}> {
     _handleonPanResponderEnd(evt, gestureState) {
         this.isPan = false
 
-        this.state.left.flattenOffset();
-        const velocity = this.props.direction === direction.Left ? gestureState.vx : -gestureState.vx;
-        const percent = this.state.left._value / this.props.width;
+        this.state.position.flattenOffset();
+        const velocity = this.props.direction === EZSideMenu.direction.Left ? gestureState.vx : -gestureState.vx;
+        const percent = this.state.position._value / this.props.width;
         //速度优先判断，然后是距离
         if (velocity > 0.5) {
             this.open();
@@ -303,20 +303,20 @@ export default class EZSideMenu extends Component<{}> {
     | -------------------------------------------------------
     */
     render() {
-        const { isOpen, left } = this.state;
+        const { isOpen, position } = this.state;
         const { direction, width, shadowStyle, menuStyle, children, menu, style } = this.props;
 
-        const nemuLeft = direction === direction.Left ?
-            left.interpolate({
+        const nemuLeft = direction === EZSideMenu.direction.Left ?
+            position.interpolate({
                 inputRange: [0, this.props.width],
                 outputRange: [-width, 0],
             }) :
-            left.interpolate({
+            position.interpolate({
                 inputRange: [0, this.props.width],
                 outputRange: [DEVICE_SCREEN.width, DEVICE_SCREEN.width - width],
             });
 
-        const opacity = left.interpolate({
+        const opacity = position.interpolate({
             inputRange: [0, this.props.width],
             outputRange: [0, 1],
         });

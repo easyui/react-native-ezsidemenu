@@ -159,7 +159,7 @@ export default class App extends Component<{}> {
       shadowStyle={{ backgroundColor: 'rgba(20,20,20,.7)' }}
       direction={EZSideMenu.direction.Right}
       ref="menu"
-      left={this.state.animation}
+      position={this.state.animation}
       width={menuWidth}
       menu={this.menu(opacity)}
       animationFunction={(prop, value) => Animated.spring(prop, {
@@ -171,8 +171,8 @@ export default class App extends Component<{}> {
   }
 
   render() {
-    // return this.simpleMenu()
-    return this.advancedMenu()
+    return this.simpleMenu()
+    // return this.advancedMenu()
   }
 }
 
