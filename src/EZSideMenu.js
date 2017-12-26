@@ -1,7 +1,7 @@
 /**
- * react-native-ezswiper
- * @author Zhu yangjun<zhuyangjun@gmail.com>
- * @url https://github.com/easyui/react-native-ezswiper
+ * react-native-ezsidemenu
+ * @author Zhu Yangjun<zhuyangjun@gmail.com>
+ * @url https://github.com/easyui/react-native-ezsidemenu
  */
 
 import React, { Component } from 'react';
@@ -9,320 +9,359 @@ import PropTypes from 'prop-types';
 import {
     View,
     TouchableWithoutFeedback,
-    ScrollView,
     Animated,
-    InteractionManager,
+    Easing,
+    StyleSheet,
+    Dimensions,
+    PanResponder,
+    ViewPropTypes
 } from 'react-native'
 
-export default class EZSwiper extends Component<{}> {
+const direction = {
+    Left: 'left',
+    Right: 'right',
+};
+
+const DEVICE_SCREEN = Dimensions.get('window');
+
+export default class EZSideMenu extends Component<{}> {
+    static direction = direction
     /**
     | -------------------------------------------------------
-    | EZSwiper component life
+    | EZSideMenu component life
     | -------------------------------------------------------
     */
     static propTypes = {
-        width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired,
-        index: PropTypes.number,
-        horizontal: PropTypes.bool,
-        loop: PropTypes.bool,
-        ratio: PropTypes.number,
-        autoplayTimeout: PropTypes.number,
-        autoplayDirection: PropTypes.bool,
-        cardParams: PropTypes.object,
+        ...ViewPropTypes,
+        menu: PropTypes.object.isRequired,
+        shadowStyle: View.propTypes.style,
+        menuStyle: View.propTypes.style,
+        direction: PropTypes.string,
+        position: PropTypes.object,
+        width: PropTypes.number,
+        animationFunction: PropTypes.func,
 
-        renderRow: PropTypes.func.isRequired,
-        onPress: PropTypes.func,
-        onWillChange: PropTypes.func,
-        onDidChange: PropTypes.func,
+        panGestureEnabled: PropTypes.bool,
+        panWidthFromEdge: PropTypes.number,
+        panTolerance: PropTypes.object,
+
+        onPanMove: PropTypes.func,
+        onSliding: PropTypes.func,
+        onMenuStateChaned: PropTypes.func,
+
+
     };
 
     static defaultProps = {
-        index: 0,
-        horizontal: true,
-        loop: true,
-        ratio: 1,
-        autoplayTimeout: 5,
-        autoplayDirection: true,
-        cardParams: {}
+        shadowStyle: { backgroundColor: 'rgba(0,0,0,.4)' },
+        menuStyle: {},
+        direction: direction.Left,
+        position: new Animated.Value(0),
+        width: DEVICE_SCREEN.width * 0.7,
+        animationFunction: (prop, value) => Animated.timing(prop, {
+            easing: Easing.inOut(Easing.ease),
+            duration: 300,
+            toValue: value
+        }),
+
+        panGestureEnabled: true,
+        panWidthFromEdge: 60,
+        panTolerance: { x: 6, y: 20 },
     };
 
     constructor(props) {
         super(props);
 
-        this.refScrollView = this.refScrollView.bind(this)
-        this.getRenderRowViews = this.getRenderRowViews.bind(this)
-        this.updateAnimated = this.updateAnimated.bind(this)
-        this.autoPlay = this.autoPlay.bind(this)
-        this.stopAutoPlay = this.stopAutoPlay.bind(this)
-
-        const { dataSource, width, height, horizontal, index, loop, ratio, autoplayTimeout, autoplayDirection, cardParams } = this.props;
-
-        const side = horizontal ? width : height
-        const cardSide = cardParams.cardSide || side * ratio
-        const cardScale = cardParams.cardSmallSide ? (cardParams.cardSmallSide / (horizontal ? height : width)) : ratio
-        this.ezswiper = {
-            horizontal: horizontal,
-            scrollToDirection: horizontal ? 'x' : 'y',
-            side: side,
-            ratio: ratio,
-            cardParams: { cardSide: cardSide, cardScale: cardScale, cardTranslate: cardParams.cardSpace ? (((side - cardSide) + (side * (1 - cardScale))) / 2 - cardParams.cardSpace) : (((side - cardSide) + (side * (1 - cardScale))) / 2 * 0.8) },
-            dataSource: dataSource,
-            count: dataSource.length,
-            currentIndex: index,
-            loop: loop,
-            autoplayTimeout: autoplayTimeout,
-            autoplayDirection: autoplayDirection,
-        }
-
-        this.scrollIndex = (this.ezswiper.loop ? this.ezswiper.currentIndex + 1 : this.ezswiper.currentIndex)        
-        
-        const scaleArray = [];
-        const translateArray = [];
-        for (let i = 0; i < this.ezswiper.count + 2; i++) {
-            scaleArray.push(new Animated.Value(1));
-            translateArray.push(new Animated.Value(0));
-        }
-        this.state = { scaleArray, translateArray };
-
+        this.open = this._open.bind(this)
+        this.close = this._close.bind(this)
         this.events = {
-            renderRow: this.renderRow.bind(this),
-            onPress: this.onPress.bind(this),
-            onWillChange: this.onWillChange.bind(this),
-            onDidChange: this.onDidChange.bind(this),
+            onPanMove: this._onPanMove.bind(this),
+            onSliding: this._onSliding.bind(this),
+            onMenuStateChaned: this._onMenuStateChaned.bind(this),
+        }
+        this.panGestures = {
+            panResponder: PanResponder,
+            initSeekPanResponder: this._initSeekPanResponder.bind(this),
+            handleonStartShouldSetPanResponder: this._handleonStartShouldSetPanResponder.bind(this),
+            handleonStartShouldSetPanResponderCapture: this._handleonStartShouldSetPanResponderCapture.bind(this),
+            handleonMoveShouldSetPanResponder: this._handleonMoveShouldSetPanResponder.bind(this),
+            handleonMoveShouldSetPanResponderCapture: this._handleonMoveShouldSetPanResponderCapture.bind(this),
+            handleonPanResponderTerminationRequest: this._handleonPanResponderTerminationRequest.bind(this),
+            handleonPanResponderGrant: this._handleonPanResponderGrant.bind(this),
+            handleonPanResponderMove: this._handleonPanResponderMove.bind(this),
+            handleonPanResponderRelease: this._handleonPanResponderEnd.bind(this),
+            handleonPanResponderTerminate: this._handleonPanResponderEnd.bind(this),
+            onPanResponderTerminationRequest: (evt, gestureState) => false,
+            onResponderTerminationRequest: (event) => { return false }
+        }
+
+        this.isPan = false
+
+        const position = props.position;
+        this.state = {
+            position,
+            isOpen: false,
+            isMoving: false
         };
+        position.addListener(this.events.onSliding);
+    }
+
+    componentWillMount() {
+        this.panGestures.initSeekPanResponder()
+    };
+
+    componentDidMount() {
     }
 
     componentWillUnmount() {
-        this.stopAutoPlay()
     }
 
     componentWillReceiveProps(nextProps) {
-        this.stopAutoPlay()
-        const { dataSource, width, height, horizontal, index, loop, ratio, autoplayTimeout, autoplayDirection, cardParams } = this.nextProps;
-
-        const side = horizontal ? width : height
-        const cardSide = cardParams.cardSide || side * ratio
-        const cardScale = cardParams.cardSmallSide ? (cardParams.cardSmallSide / (horizontal ? height : width)) : ratio
-        this.ezswiper = {
-            horizontal: horizontal,
-            scrollToDirection: horizontal ? 'x' : 'y',
-            side: side,
-            ratio: ratio,
-            cardParams: { cardSide: cardSide, cardScale: cardScale, cardTranslate: cardParams.cardSpace ? (((side - cardSide) + (side * (1 - cardScale))) / 2 - cardParams.cardSpace) : (((side - cardSide) + (side * (1 - cardScale))) / 2 * 0.8) },
-            dataSource: dataSource,
-            count: dataSource.length,
-            currentIndex: index,
-            loop: loop,
-            autoplayTimeout: autoplayTimeout,
-            autoplayDirection: autoplayDirection,
-        }
-
-        this.scrollIndex = (this.ezswiper.loop ? this.ezswiper.currentIndex + 1 : this.ezswiper.currentIndex)        
-
-        if (this.props.dataSource.length !== dataSource.length) {
-            const scaleArray = [];
-            const translateArray = [];
-            for (let i = 0; i < this.ezswiper.count + 4; i++) {
-                scaleArray.push(new Animated.Value(1));
-                translateArray.push(new Animated.Value(0));
-            }
-            this.setState({ scaleArray, translateArray });
-        }
 
     }
 
-    componentDidMount() {
-        setTimeout(() => {
-            InteractionManager.runAfterInteractions(() => {
-                this.scrollView.scrollTo({ [this.ezswiper.scrollToDirection]: (this.ezswiper.side * this.scrollIndex), animated: false });
-                this.updateAnimated(this.scrollIndex, this.scrollIndex)
-                this.autoPlay()
-                this.setState({ initialized: true });
-            });
-        }, 100);
-
+    componentWillUpdate(newProps, newState) {
+        if (newState.isOpen !== this.state.isOpen) {
+            this.events.onMenuStateChaned(newState.isOpen)
+        }
     }
-
 
     /**
     | -------------------------------------------------------
     | public api
     | -------------------------------------------------------
     */
-    scrollTo(index, animated = true) {
-        this.scrollView.scrollTo({ [this.ezswiper.scrollToDirection]: this.ezswiper.side * index, animated: animated });
-    }
+    _close() {
+        this.setState({ isMoving: true });
+        this.props
+            .animationFunction(this.state.position, 0)
+            .start(
+            () => {
+                if (!this.isPan) {
+                    this.setState({ isOpen: false, isMoving: false });
+                }
+            }
+            );
+    };
+
+    _open() {
+        this.setState({ isMoving: true });
+        this.props
+            .animationFunction(this.state.position, this.props.width)
+            .start(
+            () => {
+                if (!this.isPan) {
+                    this.setState({ isOpen: true, isMoving: false });
+                }
+            }
+            );
+    };
 
     /**
     | -------------------------------------------------------
     | private api
     | -------------------------------------------------------
     */
-    updateAnimated(currentPageFloat, scrollIndex) {
-        const { scaleArray, translateArray } = this.state;
-        for (let i = 0; i < this.ezswiper.count + 2; i++) {
-            if (i === scrollIndex) {
-                scaleArray[i].setValue(1 - Math.abs(currentPageFloat - scrollIndex) * (1 - this.ezswiper.cardParams.cardScale));
-                translateArray[i].setValue(this.ezswiper.cardParams.cardTranslate * (currentPageFloat - scrollIndex));
-            } else if (i === scrollIndex - 1 || i === scrollIndex + 1) {
-                scaleArray[i].setValue(this.ezswiper.cardParams.cardScale + Math.abs(currentPageFloat - scrollIndex) * (1 - this.ezswiper.cardParams.cardScale));
-                translateArray[i].setValue((currentPageFloat - i) * this.ezswiper.cardParams.cardTranslate);
+
+
+    /**
+    | -------------------------------------------------------
+    |  events
+    | -------------------------------------------------------
+    */
+    _onPanMove(x) {
+        if (typeof this.props.onPanMove === 'function') {
+            this.props.onPanMove(...arguments);
+        }
+    }
+    _onSliding(e) {
+
+        const val = e.value / this.props.width;
+
+        if (typeof this.props.onSliding === 'function') {
+            this.props.onSliding(e.value, val);
+        }
+    };
+    _onMenuStateChaned(isOpen) {
+        if (typeof this.props.onMenuStateChaned === 'function') {
+            this.props.onMenuStateChaned(...arguments);
+        }
+    }
+    /**
+    | -------------------------------------------------------
+    | PanResponder 
+    | -------------------------------------------------------
+    */
+    _initSeekPanResponder() {
+        this.panGestures.panResponder = PanResponder.create({
+            onStartShouldSetPanResponder: this.panGestures.handleonStartShouldSetPanResponder,
+            onStartShouldSetPanResponderCapture: this.panGestures.handleonStartShouldSetPanResponderCapture,
+            onMoveShouldSetPanResponder: this.panGestures.handleonMoveShouldSetPanResponder,
+            onMoveShouldSetPanResponderCapture: this.panGestures.handleonMoveShouldSetPanResponderCapture,
+            onPanResponderTerminationRequest: this.panGestures.handleonPanResponderTerminationRequest,
+            onPanResponderGrant: this.panGestures.handleonPanResponderGrant,
+            onPanResponderMove: this.panGestures.handleonPanResponderMove,
+            onPanResponderRelease: this.panGestures.handleonPanResponderRelease,
+            onPanResponderTerminate: this.panGestures.handleonPanResponderTerminate,
+        });
+    };
+
+    _handleonStartShouldSetPanResponder(evt, gestureState) {
+        this.isVerticalMoved = false
+        return false
+    };
+
+    _handleonStartShouldSetPanResponderCapture(evt, gestureState) {
+        return false
+    };
+
+    _handleonMoveShouldSetPanResponder(evt, gestureState) {
+        if (!this.props.panGestureEnabled || this.isVerticalMoved) {
+            return false;
+        }
+
+        const x = Math.round(Math.abs(gestureState.dx));
+        const y = Math.round(Math.abs(gestureState.dy));
+        const isHorizontalMoved = x > this.props.panTolerance.x && y < this.props.panTolerance.y;
+        this.isVerticalMoved = x < this.props.panTolerance.x && y > this.props.panTolerance.y; //如果是竖向划动后就不会在走横向逻辑了
+
+        if (!isHorizontalMoved) {
+            return false;
+        }
+
+        const offset = this.props.panWidthFromEdge;
+        const direction = this.props.direction;
+        const isOpen = this.state.isOpen;
+
+        let shoudMove = false
+        if (isOpen) {
+            if (direction === EZSideMenu.direction.Left) {
+                shoudMove = gestureState.dx < 0
             } else {
-                scaleArray[i].setValue(this.ezswiper.cardParams.cardScale);
-                translateArray[i].setValue((currentPageFloat - i) * this.ezswiper.cardParams.cardTranslate);
+                shoudMove = gestureState.dx > 0
             }
-
-        }
-    }
-
-    refScrollView(view) {
-        this.scrollView = view;
-    }
-
-    autoPlay() {
-        this.stopAutoPlay()
-        if (!this.ezswiper.loop || !this.ezswiper.autoplayTimeout) {
-            return
-        }
-
-        this.autoPlayTimer = setTimeout(() => {
-            this.scrollTo(this.scrollIndex + (this.ezswiper.autoplayDirection ? 1 : -1))
-        }, this.ezswiper.autoplayTimeout * 1000)
-
-    }
-
-    stopAutoPlay() {
-        this.autoPlayTimer && clearTimeout(this.autoPlayTimer)
-    }
-
-    /**
-    | -------------------------------------------------------
-    | EZSwiper events
-    | -------------------------------------------------------
-    */
-    renderRow(obj, index) {
-        if (typeof this.props.renderRow === 'function') {
-            return this.props.renderRow(...arguments);
-        }
-    }
-
-    onPress(obj, index) {
-        if (typeof this.props.onPress === 'function') {
-            return this.props.onPress(...arguments);
-        }
-    }
-
-    onWillChange(obj, index) {
-        if (typeof this.props.onWillChange === 'function') {
-            return this.props.onWillChange(...arguments);
-        }
-    }
-
-    onDidChange(obj, index) {
-        if (typeof this.props.onDidChange === 'function') {
-            return this.props.onDidChange(...arguments);
-        }
-    }
-    /**
-    | -------------------------------------------------------
-    | ScrollView delegate
-    | -------------------------------------------------------
-    */
-    onScroll(e) {
-        if (this.scrollView) {
-            this.stopAutoPlay()
-            let offset = e.nativeEvent.contentOffset[this.ezswiper.scrollToDirection];
-            if (this.ezswiper.loop) {
-                if (Math.abs(offset - ((this.ezswiper.count + 1) * this.ezswiper.side)) < 20.1) {
-                    offset = this.ezswiper.side
-                    this.scrollView.scrollTo({ [this.ezswiper.scrollToDirection]: offset, animated: false });
-                } else if (Math.abs(offset) < 20.1) {
-                    offset = this.ezswiper.side * this.ezswiper.count
-                    this.scrollView.scrollTo({ [this.ezswiper.scrollToDirection]: offset, animated: false });
-                }
+        } else {
+            if (direction === EZSideMenu.direction.Left) {
+                shoudMove = gestureState.moveX <= offset && gestureState.dx > 0
+            } else {
+                shoudMove = (DEVICE_SCREEN.width - gestureState.moveX <= offset) && gestureState.dx < 0
             }
-
-            let currentPageFloat = offset / this.ezswiper.side;
-            const currentPageInt = currentPageFloat % 1
-            if (currentPageInt === 0 || currentPageInt >= 0.9) {
-                currentPageFloat = Math.ceil(currentPageFloat)
-                this.willIndex = undefined
-                this.scrollIndex = currentPageFloat
-                this.autoPlay()
-            }
-
-
-
-            const willIndex = Math.round(currentPageFloat);
-            if (this.willIndex === undefined && willIndex !== this.scrollIndex) {
-                this.willIndex = willIndex
-                const dataSourceIndex = this.ezswiper.loop ? (this.willIndex + this.ezswiper.count - 1) % this.ezswiper.count : this.willIndex
-                this.onWillChange(this.ezswiper.dataSource[dataSourceIndex], dataSourceIndex)
-            }
-
-            const oldIndex = this.ezswiper.currentIndex
-            this.ezswiper.currentIndex = this.ezswiper.loop ? (this.scrollIndex + this.ezswiper.count - 1) % this.ezswiper.count : this.scrollIndex
-            if (oldIndex !== this.ezswiper.currentIndex) {
-                this.onDidChange(this.ezswiper.dataSource[this.ezswiper.currentIndex], this.ezswiper.currentIndex)
-            }
-
-            this.updateAnimated(currentPageFloat, this.scrollIndex);
         }
-    }
+        if (shoudMove) {
+            this.isPan = true
+            this.setState({ isMoving: true });
+        }
+        return shoudMove
+    };
+
+    _handleonMoveShouldSetPanResponderCapture(evt, gestureState) {
+        return false
+    };
+
+    _handleonPanResponderTerminationRequest(evt, gestureState) {
+        return true
+    };
+
+    _handleonPanResponderGrant(evt, gestureState) {
+        this.state.position.setOffset(this.state.position._value);
+        this.state.position.setValue(0);
+    };
+
+    _handleonPanResponderMove(evt, gestureState) {
+        const { dx } = gestureState;
+        const position = this.props.direction === EZSideMenu.direction.Left ? dx : -dx;
+
+        const x = Math.min(position, this.props.width - this.state.position._offset);
+        if (x !== this.state.position._value) {
+            this.state.position.setValue(x);
+            this.events.onPanMove(x)
+        }
+    };
+
+    _handleonPanResponderEnd(evt, gestureState) {
+        this.isPan = false
+
+        this.state.position.flattenOffset();
+        const velocity = this.props.direction === EZSideMenu.direction.Left ? gestureState.vx : -gestureState.vx;
+        const percent = this.state.position._value / this.props.width;
+        //速度优先判断，然后是距离
+        if (velocity > 0.5) {
+            this.open();
+        } else if (velocity < -0.5) {
+            this.close();
+        } else if (percent > 0.5) {
+            this.open();
+        } else {
+            this.close();
+        }
+    };
+
 
     /**
     | -------------------------------------------------------
     | Render
     | -------------------------------------------------------
     */
-    getRenderRowViews() {
-        const { scaleArray, translateArray } = this.state;
-        const { width, height } = this.props;
-
-        const count = this.ezswiper.count + (this.ezswiper.loop ? 2 : 0);
-        const margin = (this.ezswiper.side - this.ezswiper.cardParams.cardSide) / 2;
-        const views = [];
-        const maxIndex = this.ezswiper.count - 1
-
-        for (let i = 0; i < count; i++) {
-            const dataSourceIndex = this.ezswiper.loop ? (i + maxIndex) % this.ezswiper.count : i
-            const currentItem = this.ezswiper.dataSource[dataSourceIndex]
-            views.push(
-                <View key={i} style={{ flexDirection: this.ezswiper.horizontal ? 'row' : 'column' }}>
-                    <View style={{ [this.ezswiper.horizontal ? 'width' : 'height']: margin, backgroundColor: 'transparent' }} />
-                    <TouchableWithoutFeedback onPress={() => this.events.onPress(currentItem, dataSourceIndex)}>
-                        <Animated.View style={{ backgroundColor: 'transparent', width: this.ezswiper.horizontal ? this.ezswiper.cardParams.cardSide : width, height: this.ezswiper.horizontal ? height : this.ezswiper.cardParams.cardSide, transform: [{ [this.ezswiper.horizontal ? 'scaleY' : 'scaleX']: scaleArray[i] }, { [this.ezswiper.horizontal ? 'translateX' : 'translateY']: translateArray[i] }] }} >
-                            {this.events.renderRow(currentItem, dataSourceIndex)}
-                        </Animated.View>
-                    </TouchableWithoutFeedback>
-                    <View style={{ [this.ezswiper.horizontal ? 'width' : 'height']: margin, backgroundColor: 'transparent' }} />
-                </View>
-            );
-        }
-        return views;
-    }
-
     render() {
-        const { width, height } = this.props;
+        const { isOpen, position } = this.state;
+        const { direction, width, shadowStyle, menuStyle, children, menu, style } = this.props;
+
+        const nemuLeft = direction === EZSideMenu.direction.Left ?
+            position.interpolate({
+                inputRange: [0, this.props.width],
+                outputRange: [-width, 0],
+            }) :
+            position.interpolate({
+                inputRange: [0, this.props.width],
+                outputRange: [DEVICE_SCREEN.width, DEVICE_SCREEN.width - width],
+            });
+
+        const opacity = position.interpolate({
+            inputRange: [0, this.props.width],
+            outputRange: [0, 1],
+        });
+
+        let shadowView = null
+        if (this.state.isMoving || this.state.isOpen) {
+            shadowView = (<TouchableWithoutFeedback onPress={this.close}>
+                <Animated.View style={[styles.shadow, { opacity }, shadowStyle, { position: 'absolute' }]}>
+                    <View style={{ width: width }}>
+                    </View>
+                </Animated.View>
+            </TouchableWithoutFeedback>)
+        }
+
         return (
-            <View style={[this.props.style, { overflow: 'hidden' }]}>
-                <ScrollView
-                    style={{ backgroundColor: 'transparent', opacity: this.state.initialized ? 1 : 0 }}
-                    horizontal={this.ezswiper.horizontal}
-                    pagingEnabled
-                    ref={this.refScrollView}
-                    onScroll={e => this.onScroll(e)}
-                    scrollEventThrottle={16}
-                    showsHorizontalScrollIndicator={false}
-                    showsVerticalScrollIndicator={false}
-                    onLayout={event => {
-                        // event.nativeEvent.layout.width
-                    }}
-                >
-                    {this.getRenderRowViews()}
-                </ScrollView>
+            <View style={[styles.container, style]} {...this.panGestures.panResponder.panHandlers}>
+                {children}
+                {shadowView}
+                <Animated.View style={[styles.menuStyle, { left: nemuLeft, width: width }, menuStyle]}>
+                    {menu}
+                </Animated.View>
             </View>
         );
     }
 }
+
+
+const absoluteStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+};
+
+const styles = StyleSheet.create({
+    container: { flex: 1 },
+    menuStyle: {
+        ...absoluteStyle,
+    },
+    shadow: {
+        ...absoluteStyle,
+    }
+});
+
+
