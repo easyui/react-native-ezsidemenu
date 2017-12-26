@@ -20,7 +20,9 @@ import {
   Linking,
   Dimensions
 } from 'react-native';
-import EZSideMenu from './EZSideMenu'
+// import EZSideMenu from './EZSideMenu'
+import EZSideMenu from 'react-native-ezsidemenu';
+
 const instructions = Platform.select({
   ios: 'Press Cmd+R to reload,\n' +
     'Cmd+D or shake for dev menu',
@@ -171,8 +173,8 @@ export default class App extends Component<{}> {
   }
 
   render() {
-    return this.simpleMenu()
-    // return this.advancedMenu()
+    // return this.simpleMenu()
+    return this.advancedMenu()
   }
 }
 

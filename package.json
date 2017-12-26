@@ -1,6 +1,6 @@
 {
   "name": "react-native-ezsidemenu",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "customizable side menu for React Native on iOS&android.",
   "main": "index.js",
   "directories": {
