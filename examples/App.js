@@ -152,12 +152,12 @@ export default class App extends Component<{}> {
     });
     return <EZSideMenu
       onMenuStateChaned={(isOpen) => { this.setState({ isOpen }) }}
-      // onPanMove={(x) => { console.log('onPanMove ' + x) }}
-      // onSliding={(x, persent) => { console.log('onSliding x ' + x + ' persent ' + persent) }}
+      onPanMove={(x) => { console.log('onPanMove ' + x) }}
+      onSliding={(x, persent) => { console.log('onSliding x ' + x + ' persent ' + persent) }}
 
       menuStyle={styles.container}
       shadowStyle={{ backgroundColor: 'rgba(20,20,20,.7)' }}
-      direction={EZSideMenu.positions.Right}
+      direction={EZSideMenu.direction.Right}
       ref="menu"
       left={this.state.animation}
       width={menuWidth}

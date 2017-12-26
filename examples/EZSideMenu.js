@@ -17,7 +17,7 @@ import {
     ViewPropTypes
 } from 'react-native'
 
-const positions = {
+const direction = {
     Left: 'left',
     Right: 'right',
 };
@@ -25,7 +25,7 @@ const positions = {
 const DEVICE_SCREEN = Dimensions.get('window');
 
 export default class EZSideMenu extends Component<{}> {
-    static positions = positions
+    static direction = direction
     /**
     | -------------------------------------------------------
     | EZSideMenu component life
@@ -55,9 +55,9 @@ export default class EZSideMenu extends Component<{}> {
     static defaultProps = {
         shadowStyle: { backgroundColor: 'rgba(0,0,0,.4)' },
         menuStyle: {},
-        direction: positions.Left,
+        direction: direction.Left,
         left: new Animated.Value(0),
-        width: DEVICE_SCREEN.width * .66,
+        width: DEVICE_SCREEN.width * 0.7,
         animationFunction: (prop, value) => Animated.timing(prop, {
             easing: Easing.inOut(Easing.ease),
             duration: 300,
@@ -235,13 +235,13 @@ export default class EZSideMenu extends Component<{}> {
 
         let shoudMove = false
         if (isOpen) {
-            if (direction === positions.Left) {
+            if (direction === direction.Left) {
                 shoudMove = gestureState.dx < 0
             } else {
                 shoudMove = gestureState.dx > 0
             }
         } else {
-            if (direction === positions.Left) {
+            if (direction === direction.Left) {
                 shoudMove = gestureState.moveX <= offset && gestureState.dx > 0
             } else {
                 shoudMove = (DEVICE_SCREEN.width - gestureState.moveX <= offset) && gestureState.dx < 0
@@ -269,7 +269,7 @@ export default class EZSideMenu extends Component<{}> {
 
     _handleonPanResponderMove(evt, gestureState) {
         const { dx } = gestureState;
-        const position = this.props.direction === positions.Left ? dx : -dx;
+        const position = this.props.direction === direction.Left ? dx : -dx;
 
         const x = Math.min(position, this.props.width - this.state.left._offset);
         if (x !== this.state.left._value) {
@@ -282,7 +282,7 @@ export default class EZSideMenu extends Component<{}> {
         this.isPan = false
 
         this.state.left.flattenOffset();
-        const velocity = this.props.direction === positions.Left ? gestureState.vx : -gestureState.vx;
+        const velocity = this.props.direction === direction.Left ? gestureState.vx : -gestureState.vx;
         const percent = this.state.left._value / this.props.width;
         //速度优先判断，然后是距离
         if (velocity > 0.5) {
@@ -306,7 +306,7 @@ export default class EZSideMenu extends Component<{}> {
         const { isOpen, left } = this.state;
         const { direction, width, shadowStyle, menuStyle, children, menu, style } = this.props;
 
-        const nemuLeft = direction === positions.Left ?
+        const nemuLeft = direction === direction.Left ?
             left.interpolate({
                 inputRange: [0, this.props.width],
                 outputRange: [-width, 0],
