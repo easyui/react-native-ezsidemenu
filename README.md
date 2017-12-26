@@ -28,7 +28,7 @@ import library：
 import EZSideMenu from 'react-native-ezsidemenu';
 ```
 
-### simple swiper
+### simple
 
 ```js
 //App.js
