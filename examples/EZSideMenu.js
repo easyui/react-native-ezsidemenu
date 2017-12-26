@@ -207,20 +207,15 @@ export default class EZSideMenu extends Component<{}> {
     };
 
     _handleonStartShouldSetPanResponder(evt, gestureState) {
-        console.log('_handleonStartShouldSetPanResponder')
         this.isVerticalMoved = false
         return false
     };
 
     _handleonStartShouldSetPanResponderCapture(evt, gestureState) {
-        console.log('_handleonStartShouldSetPanResponderCapture')
-
         return false
     };
 
     _handleonMoveShouldSetPanResponder(evt, gestureState) {
-        console.log('_handleonMoveShouldSetPanResponder ')
-
         if (!this.props.panGestureEnabled || this.isVerticalMoved) {
             return false;
         }
@@ -260,23 +255,19 @@ export default class EZSideMenu extends Component<{}> {
     };
 
     _handleonMoveShouldSetPanResponderCapture(evt, gestureState) {
-        console.log('_handleonMoveShouldSetPanResponderCapture')
         return false
     };
 
     _handleonPanResponderTerminationRequest(evt, gestureState) {
-        console.log('_handleonPanResponderTerminationRequest')
         return true
     };
 
     _handleonPanResponderGrant(evt, gestureState) {
-        console.log('_handleonPanResponderGrant')
         this.state.left.setOffset(this.state.left._value);
         this.state.left.setValue(0);
     };
 
     _handleonPanResponderMove(evt, gestureState) {
-        console.log('_handleonPanResponderMove' + this.state.left._value)
         const { dx } = gestureState;
         const position = this.props.direction === positions.Left ? dx : -dx;
 
@@ -288,7 +279,6 @@ export default class EZSideMenu extends Component<{}> {
     };
 
     _handleonPanResponderEnd(evt, gestureState) {
-        console.log('_handleonPanResponderEnd')
         this.isPan = false
 
         this.state.left.flattenOffset();
