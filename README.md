@@ -88,6 +88,7 @@ simpleMenu() {
 | shadowStyle | View.propTypes.style | { backgroundColor: 'rgba(0,0,0,.4)' } |  the style of the menu sahdow|
 | menuStyle | View.propTypes.style | {} | the style of the menu  |
 | direction | PropTypes.string | direction.Left | the direction of the menu |
+| type | PropTypes.string | type.Default | the animation of the menu |
 | position | PropTypes.object | new Animated.Value(0) | the distance of the menu |
 | width | PropTypes.number | DEVICE_SCREEN.width * 0.7 | the width of the menu |
 | animationFunction | PropTypes.func | animationFunction: (prop, value) => Animated.timing(prop, { <br /> easing: Easing.inOut(Easing.ease), <br /> duration: 300, <br /> toValue: value <br /> }), | the animation of the menu |

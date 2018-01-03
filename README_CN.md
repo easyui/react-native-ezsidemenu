@@ -87,6 +87,7 @@ simpleMenu() {
 | shadowStyle | View.propTypes.style | { backgroundColor: 'rgba(0,0,0,.4)' } |  菜单旁的样式|
 | menuStyle | View.propTypes.style | {} | 菜单组件样式  |
 | direction | PropTypes.string | direction.Left | 菜单方向 |
+| type | PropTypes.string | type.Default | 菜单划动动画效果 |
 | position | PropTypes.object | new Animated.Value(0) | 菜单滑出位置|
 | width | PropTypes.number | DEVICE_SCREEN.width * 0.7 | 菜单宽度 |
 | animationFunction | PropTypes.func | animationFunction: (prop, value) => Animated.timing(prop, { <br /> easing: Easing.inOut(Easing.ease), <br /> duration: 300, <br /> toValue: value <br /> }), | 菜单划动动画 |
