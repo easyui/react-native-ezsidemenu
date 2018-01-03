@@ -17,8 +17,14 @@ $ npm install react-native-ezsidemenu --save
 
 ## Preview
 
-![showios](showios.gif)  ![showandroid](showandroid.gif)
+### default type
+![defaultIos](defaultIos.gif)  ![defaultAndroid](defaultAndroid.gif)
 
+### overlay type
+![overlayIos](overlayIos.gif)  ![overlayAndroid](overlayAndroid.gif)
+
+### slide type
+![slideIos](slideIos.gif)  ![slideAndroid](slideAndroid.gif)
 
 ## Usage
 
@@ -55,7 +61,7 @@ simpleMenu() {
       onMenuStateChaned={(isOpen) => { this.setState({ isOpen }) }}
       onPanMove={(x) => { console.log('onPanMove ' + x) }}
       onSliding={(x, persent) => { console.log('onSliding x ' + x + ' persent ' + persent) }}
-
+      type={EZSideMenu.type.Default}
       menuStyle={styles.container}
       shadowStyle={{ backgroundColor: 'rgba(20,20,20,.7)' }}
       direction={EZSideMenu.direction.Right}

@@ -22,10 +22,18 @@ const direction = {
     Right: 'right',
 };
 
+const type = {
+    Default: 'default',
+    Overlay: 'overlay',
+    Slide: 'slide'
+  };
+
 const DEVICE_SCREEN = Dimensions.get('window');
 
 export default class EZSideMenu extends Component<{}> {
     static direction = direction
+    static type = type
+
     /**
     | -------------------------------------------------------
     | EZSideMenu component life
@@ -36,7 +44,8 @@ export default class EZSideMenu extends Component<{}> {
         menu: PropTypes.object.isRequired,
         shadowStyle: View.propTypes.style,
         menuStyle: View.propTypes.style,
-        direction: PropTypes.string,
+        direction: PropTypes.oneOf(Object.values(direction)),
+        type: PropTypes.oneOf(Object.values(type)),
         position: PropTypes.object,
         width: PropTypes.number,
         animationFunction: PropTypes.func,
@@ -56,6 +65,7 @@ export default class EZSideMenu extends Component<{}> {
         shadowStyle: { backgroundColor: 'rgba(0,0,0,.4)' },
         menuStyle: {},
         direction: direction.Left,
+        type: type.Slide,
         position: new Animated.Value(0),
         width: DEVICE_SCREEN.width * 0.7,
         animationFunction: (prop, value) => Animated.timing(prop, {
@@ -104,6 +114,32 @@ export default class EZSideMenu extends Component<{}> {
             isMoving: false
         };
         position.addListener(this.events.onSliding);
+
+  
+        this.childrenLeft = this.props.direction === EZSideMenu.direction.Left ?
+            position.interpolate({
+                inputRange: [0, DEVICE_SCREEN.width],
+                outputRange: [0,DEVICE_SCREEN.width],
+            }) :
+            position.interpolate({
+                inputRange: [0, DEVICE_SCREEN.width],
+                outputRange: [0,-DEVICE_SCREEN.width],
+            });
+
+        this.nemuLeft = this.props.direction === EZSideMenu.direction.Left ?
+            position.interpolate({
+                inputRange: [0, this.props.width],
+                outputRange: [-this.props.width, 0],
+            }) :
+            position.interpolate({
+                inputRange: [0, this.props.width],
+                outputRange: [DEVICE_SCREEN.width, DEVICE_SCREEN.width - this.props.width],
+            });
+
+        this.shadowOpacity = position.interpolate({
+                inputRange: [0, this.props.width],
+                outputRange: [0, 1],
+            })
     }
 
     componentWillMount() {
@@ -114,10 +150,6 @@ export default class EZSideMenu extends Component<{}> {
     }
 
     componentWillUnmount() {
-    }
-
-    componentWillReceiveProps(nextProps) {
-
     }
 
     componentWillUpdate(newProps, newState) {
@@ -162,7 +194,6 @@ export default class EZSideMenu extends Component<{}> {
     | private api
     | -------------------------------------------------------
     */
-
 
     /**
     | -------------------------------------------------------
@@ -296,7 +327,6 @@ export default class EZSideMenu extends Component<{}> {
         }
     };
 
-
     /**
     | -------------------------------------------------------
     | Render
@@ -304,45 +334,53 @@ export default class EZSideMenu extends Component<{}> {
     */
     render() {
         const { isOpen, position } = this.state;
-        const { direction, width, shadowStyle, menuStyle, children, menu, style } = this.props;
-
-        const nemuLeft = direction === EZSideMenu.direction.Left ?
-            position.interpolate({
-                inputRange: [0, this.props.width],
-                outputRange: [-width, 0],
-            }) :
-            position.interpolate({
-                inputRange: [0, this.props.width],
-                outputRange: [DEVICE_SCREEN.width, DEVICE_SCREEN.width - width],
-            });
-
-        const opacity = position.interpolate({
-            inputRange: [0, this.props.width],
-            outputRange: [0, 1],
-        });
+        const { type, direction, width, shadowStyle, menuStyle, children, menu, style } = this.props;
 
         let shadowView = null
         if (this.state.isMoving || this.state.isOpen) {
             shadowView = (<TouchableWithoutFeedback onPress={this.close}>
-                <Animated.View style={[styles.shadow, { opacity }, shadowStyle, { position: 'absolute' }]}>
+                <Animated.View style={[absoluteStyle, {opacity: this.shadowOpacity }, shadowStyle]}>
                     <View style={{ width: width }}>
                     </View>
                 </Animated.View>
             </TouchableWithoutFeedback>)
         }
+        let view 
+        if (type === EZSideMenu.type.Default) {
+            view =  <View style={[styles.container, style]} {...this.panGestures.panResponder.panHandlers}>
+            <View style={[absoluteStyle, { [direction === EZSideMenu.direction.Left ? 'right': 'left'] : DEVICE_SCREEN.width - width},menuStyle]}>
+            {menu}
+            </View>
+            <Animated.View style={[absoluteStyle, { left: this.childrenLeft, width: DEVICE_SCREEN.width }]}>
+            {children}
+            {shadowView}
+            </Animated.View>
+        </View>
+        } else if(type ===  EZSideMenu.type.Overlay){
+            view =  <View style={[styles.container, style]} {...this.panGestures.panResponder.panHandlers}>
+            {children}
+            {shadowView}
+            <Animated.View style={[absoluteStyle, { left: this.nemuLeft, width: width }, menuStyle]}>
+            {menu}
+            </Animated.View>
+        </View>
+        }else{
+            view =  <View style={[styles.container, style]} {...this.panGestures.panResponder.panHandlers}>
+            <Animated.View style={[absoluteStyle, { left: this.nemuLeft, width: width }, menuStyle]}>
+            {menu}
+            </Animated.View>
+            <Animated.View style={[absoluteStyle, { left: this.childrenLeft, width: DEVICE_SCREEN.width }]}>
+            {children}
+            {shadowView}
+            </Animated.View>
+            </View>
+        }
 
         return (
-            <View style={[styles.container, style]} {...this.panGestures.panResponder.panHandlers}>
-                {children}
-                {shadowView}
-                <Animated.View style={[styles.menuStyle, { left: nemuLeft, width: width }, menuStyle]}>
-                    {menu}
-                </Animated.View>
-            </View>
+        view
         );
     }
 }
-
 
 const absoluteStyle = {
     position: 'absolute',
@@ -363,5 +401,3 @@ const styles = StyleSheet.create({
         ...absoluteStyle,
     }
 });
-
-
