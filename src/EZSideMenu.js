@@ -195,6 +195,7 @@ export default class EZSideMenu extends Component<{}> {
     | -------------------------------------------------------
     */
 
+
     /**
     | -------------------------------------------------------
     |  events
@@ -247,7 +248,7 @@ export default class EZSideMenu extends Component<{}> {
     };
 
     _handleonMoveShouldSetPanResponder(evt, gestureState) {
-        if (!this.props.panGestureEnabled || this.isVerticalMoved) {
+        if (!this.props.panGestureEnabled || this.isVerticalMoved || this.state.isMoving) {
             return false;
         }
 
@@ -302,7 +303,7 @@ export default class EZSideMenu extends Component<{}> {
         const { dx } = gestureState;
         const position = this.props.direction === EZSideMenu.direction.Left ? dx : -dx;
 
-        const x = Math.min(position, this.props.width - this.state.position._offset);
+        const x = Math.max(Math.min(position, this.props.width - this.state.position._offset),this.state.isOpen ? - this.props.width :0 );
         if (x !== this.state.position._value) {
             this.state.position.setValue(x);
             this.events.onPanMove(x)
@@ -326,6 +327,7 @@ export default class EZSideMenu extends Component<{}> {
             this.close();
         }
     };
+
 
     /**
     | -------------------------------------------------------
@@ -382,6 +384,7 @@ export default class EZSideMenu extends Component<{}> {
     }
 }
 
+
 const absoluteStyle = {
     position: 'absolute',
     top: 0,
@@ -401,3 +404,5 @@ const styles = StyleSheet.create({
         ...absoluteStyle,
     }
 });
+
+
