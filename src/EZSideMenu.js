@@ -54,7 +54,9 @@ export default class EZSideMenu extends Component<{}> {
         panWidthFromEdge: PropTypes.number,
         panTolerance: PropTypes.object,
 
+        onPanStartMove: PropTypes.func,
         onPanMove: PropTypes.func,
+        onPanEndMove: PropTypes.func,
         onSliding: PropTypes.func,
         onMenuStateChaned: PropTypes.func,
 
@@ -85,7 +87,9 @@ export default class EZSideMenu extends Component<{}> {
         this.open = this._open.bind(this)
         this.close = this._close.bind(this)
         this.events = {
+            onPanStartMove: this._onPanStartMove.bind(this),
             onPanMove: this._onPanMove.bind(this),
+            onPanEndMove: this._onPanEndMove.bind(this),
             onSliding: this._onSliding.bind(this),
             onMenuStateChaned: this._onMenuStateChaned.bind(this),
         }
@@ -101,8 +105,6 @@ export default class EZSideMenu extends Component<{}> {
             handleonPanResponderMove: this._handleonPanResponderMove.bind(this),
             handleonPanResponderRelease: this._handleonPanResponderEnd.bind(this),
             handleonPanResponderTerminate: this._handleonPanResponderEnd.bind(this),
-            onPanResponderTerminationRequest: (evt, gestureState) => false,
-            onResponderTerminationRequest: (event) => { return false }
         }
 
         this.isPan = false
@@ -201,11 +203,24 @@ export default class EZSideMenu extends Component<{}> {
     |  events
     | -------------------------------------------------------
     */
+    _onPanStartMove(){
+        if (typeof this.props.onPanStartMove === 'function') {
+            this.props.onPanStartMove(...arguments);
+        }
+    }
+
     _onPanMove(x) {
         if (typeof this.props.onPanMove === 'function') {
             this.props.onPanMove(...arguments);
         }
     }
+
+    _onPanEndMove(){
+        if (typeof this.props.onPanEndMove === 'function') {
+            this.props.onPanEndMove(...arguments);
+        }
+    }
+
     _onSliding(e) {
 
         const val = e.value / this.props.width;
@@ -214,6 +229,7 @@ export default class EZSideMenu extends Component<{}> {
             this.props.onSliding(e.value, val);
         }
     };
+
     _onMenuStateChaned(isOpen) {
         if (typeof this.props.onMenuStateChaned === 'function') {
             this.props.onMenuStateChaned(...arguments);
@@ -295,6 +311,7 @@ export default class EZSideMenu extends Component<{}> {
     };
 
     _handleonPanResponderGrant(evt, gestureState) {
+        this.events.onPanStartMove()
         this.state.position.setOffset(this.state.position._value);
         this.state.position.setValue(0);
     };
@@ -312,6 +329,7 @@ export default class EZSideMenu extends Component<{}> {
 
     _handleonPanResponderEnd(evt, gestureState) {
         this.isPan = false
+        this.events.onPanEndMove()
 
         this.state.position.flattenOffset();
         const velocity = this.props.direction === EZSideMenu.direction.Left ? gestureState.vx : -gestureState.vx;
@@ -327,7 +345,6 @@ export default class EZSideMenu extends Component<{}> {
             this.close();
         }
     };
-
 
     /**
     | -------------------------------------------------------
