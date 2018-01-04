@@ -94,7 +94,9 @@ simpleMenu() {
 | panGestureEnabled | PropTypes.bool | true | 菜单是否支持手势划动 |
 | panWidthFromEdge | PropTypes.number | 60 | 菜单划开有效距离 |
 | panTolerance | PropTypes.object | { x: 6, y: 20 } |  菜单划动容错范围 |
-| onPanMove | PropTypes.func | | 菜单划动回调 |
+| onPanStartMove | PropTypes.func | | 菜单开始划动回调 |
+| onPanMove | PropTypes.func | | 菜单划动中回调|
+| onPanEndMove | PropTypes.func | | 菜单结束划动回调 |
 | onSliding | PropTypes.func | | 菜单动画回调 | 
 | onMenuStateChaned | PropTypes.func | | 菜单状态改变回调 |
        

@@ -95,7 +95,9 @@ simpleMenu() {
 | panGestureEnabled | PropTypes.bool | true | the menu can be move with gestures or not |
 | panWidthFromEdge | PropTypes.number | 60 | edge distance on content view to open side menu |
 | panTolerance | PropTypes.object | { x: 6, y: 20 } |  pan move tolerance |
+| onPanStartMove | PropTypes.func | | callback on menu start move |
 | onPanMove | PropTypes.func | | callback on menu move |
+| onPanEndMove | PropTypes.func | | callback on menu end move |
 | onSliding | PropTypes.func | | callback on menu is sliding | 
 | onMenuStateChaned | PropTypes.func | | callback on menu state is chaned |
        
