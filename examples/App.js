@@ -36,7 +36,8 @@ export default class App extends Component<{}> {
     super(props);
     this.state = {
       isOpen: false,
-      animation: new Animated.Value(0)
+      animation: new Animated.Value(0),
+      scroll: true
     }
 
     this.toggle = this._toggle.bind(this)
@@ -74,7 +75,9 @@ export default class App extends Component<{}> {
       <View style={{ alignItems: 'center', backgroundColor: 'white' }}>
         <Text>{`isOpen: ${this.state.isOpen}`}</Text>
       </View>
-      <ScrollView style={[styles.scrollView]} contentInsetAdjustmentBehavior="automatic">
+      <ScrollView ref="scrollView" style={[styles.scrollView]} contentInsetAdjustmentBehavior="automatic"
+        scrollEnabled={this.state.scroll}  //adapt android
+      >
         <Text style={styles.welcome}>
           Welcome to React Native!
  </Text>
@@ -156,6 +159,8 @@ export default class App extends Component<{}> {
       onMenuStateChaned={(isOpen) => { this.setState({ isOpen }) }}
       onPanMove={(x) => { console.log('onPanMove ' + x) }}
       onSliding={(x, persent) => { console.log('onSliding x ' + x + ' persent ' + persent) }}
+      onPanStartMove={() => { this.setState({ scroll: false }) }}//adapt android
+      onPanEndMove={() => { this.setState({ scroll: true }) }}//adapt android
       type={EZSideMenu.type.Default}
       menuStyle={styles.container}
       shadowStyle={{ backgroundColor: 'rgba(20,20,20,.7)' }}
@@ -164,6 +169,7 @@ export default class App extends Component<{}> {
       position={this.state.animation}
       width={menuWidth}
       menu={this.menu(opacity)}
+      panWidthFromEdge={200}
       animationFunction={(prop, value) => Animated.spring(prop, {
         friction: 10,
         toValue: value
